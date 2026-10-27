@@ -1,0 +1,24 @@
+name: NBA halftime alerts
+
+on:
+  schedule:
+    - cron: "0 17 * * *"
+    - cron: "0 23 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Watch for halftime
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TEAMS: ${{ vars.TEAMS }}
+          RUN_MINUTES: "345"
+          POLL_SECONDS: "30"
+        run: python notify.py
