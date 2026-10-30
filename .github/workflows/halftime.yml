@@ -2,9 +2,17 @@ name: NBA halftime alerts
 
 on:
   schedule:
-    - cron: "0 17 * * *"
-    - cron: "0 23 * * *"
-  workflow_dispatch: {}
+    # Starts a run every hour from late morning to late night Eastern time
+    # (UTC hours 14-23 and 0-3). Runs that find no live or upcoming games stop
+    # within seconds. Off-the-hour minute (17) avoids GitHub's busiest moment.
+    - cron: "17 14-23,0-3 * * *"
+  workflow_dispatch: {}   # lets you start it by hand from the Actions tab
+
+# Only one watcher at a time. A newer run waits its turn and takes over the
+# moment the current one ends, so there are no gaps and no double alerts.
+concurrency:
+  group: halftime-watch
+  cancel-in-progress: false
 
 jobs:
   watch:
@@ -18,7 +26,9 @@ jobs:
       - name: Watch for halftime
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
           TEAMS: ${{ vars.TEAMS }}
-          RUN_MINUTES: "345"
-          POLL_SECONDS: "30"
+          IGNORE_TEAMS: ${{ vars.IGNORE_TEAMS }}
+          RUN_MINUTES: "330"
+          POLL_SECONDS: "20"
         run: python notify.py
